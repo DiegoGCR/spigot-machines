@@ -1,0 +1,5 @@
+name: SpigotMachinery
+version: ${project.version}
+main: me.ammonium.spigotmachinery.SpigotMachinery
+authors: [Ammonium]
+description: Creating automatable machines with hoppers
