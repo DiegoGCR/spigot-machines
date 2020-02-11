@@ -160,7 +160,7 @@ public final class EventListener implements Listener {
                     mfList.add(temp);
                 }
             } catch (NullPointerException ignored) {
-
+                // Ignored. Reason: doesn't happen with summoners
             }
         }
     }
