@@ -28,91 +28,29 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.*;
-import java.util.Map;
 
 import static me.ammonium.spigotmachinery.SpigotMachinery.mfList;
-
-class SpigotMachine implements Serializable {
-    Map<String, Object> inputHopperLoc;
-    Map<String, Object> outputHopperLoc;
-    private Map<String, Object> machineBottom;
-    private Map<String, Object> machineTop;
-    private Map<String, Object> coreBlock;
-    private Map<String, Object> fuelHopperLoc;
-    int fuelRemaining = 0;
-
-    void setCoreBlock(Location coreBlock) {
-        this.coreBlock = coreBlock.serialize();
-    }
-    void setMachineBottom(Location machineBottom) {
-        this.machineBottom = machineBottom.serialize();
-    }
-    void setMachineTop(Location machineTop) {
-        this.machineTop = machineTop.serialize();
-    }
-    void setFuelHopperLoc(Location fuelHopperLoc) {
-        this.fuelHopperLoc = fuelHopperLoc.serialize();
-    }
-    void setInputHopperLoc(Location inputHopperLoc) {
-        this.inputHopperLoc = inputHopperLoc.serialize();
-    }
-    void setOutputHopperLoc(Location outputHopperLoc) {
-        this.outputHopperLoc = outputHopperLoc.serialize();
-    }
-    Location getFuelHopperLoc() {
-        return Location.deserialize(fuelHopperLoc);
-    }
-    Location getInputHopperLoc() {
-        return Location.deserialize(inputHopperLoc);
-    }
-    Location getMachineBottom() {
-        return Location.deserialize(machineBottom);
-    }
-    Location getMachineTop() {
-        return Location.deserialize(machineTop);
-    }
-    Location getCoreBlock() {
-        return Location.deserialize(coreBlock);
-    }
-
-    boolean processFuel(ItemStack input) {
-        if (fuelRemaining < 100 && input.getType().equals(Material.COAL)) {
-            fuelRemaining += 6;
-            Hopper fuelHop = (Hopper) Location.deserialize(fuelHopperLoc).getBlock().getState();
-            Inventory fuelInv = fuelHop.getInventory();
-            fuelInv.removeItem(input);
-            return true;
-        } else if (fuelRemaining < 100 && input.getType().equals(Material.COAL_BLOCK)) {
-            fuelRemaining += 54;
-            Hopper fuelHop = (Hopper) Location.deserialize(fuelHopperLoc).getBlock().getState();
-            Inventory fuelInv = fuelHop.getInventory();
-            fuelInv.removeItem(input);
-            return true;
-        } else {
-            return false;
-        }
-
-
-    }
-
-    void processInput(ItemStack input) {}
-}
 
 
 class MechanicalFurnace extends SpigotMachine {
 
     @Override
-    public void processInput(ItemStack input) {
+    boolean processInput(ItemStack input) {
         // Check if input has a product
         Material product = null;
+        int amount = 0;
         if (input.getType().equals(Material.IRON_ORE)) {
             product = Material.IRON_INGOT;
+            amount = 2;
         } else if (input.getType().equals(Material.GOLD_ORE)) {
             product = Material.GOLD_INGOT;
+            amount = 2;
         } else if (input.getType().equals(Material.COBBLESTONE)) {
             product = Material.STONE;
+            amount = 1;
         } else if (input.getType().equals(Material.REDSTONE)) {
             product = Material.OBSIDIAN;
+            amount = 1;
         }
 
         // Consume input, decrease fuel, and output product
@@ -120,11 +58,15 @@ class MechanicalFurnace extends SpigotMachine {
             fuelRemaining--;
             Hopper outputHop = (Hopper) Location.deserialize(outputHopperLoc).getBlock().getState();
             Inventory output = outputHop.getInventory();
-            output.addItem(new ItemStack(product, 2));
+            output.addItem(new ItemStack(product, amount));
+            Hopper inputHop = (Hopper) Location.deserialize(inputHopperLoc).getBlock().getState();
+            Inventory inputInv = inputHop.getInventory();
+            inputInv.removeItem(input);
+            return true;
+        } else {
+            return false;
         }
-        Hopper inputHop = (Hopper) Location.deserialize(inputHopperLoc).getBlock().getState();
-        Inventory inputInv = inputHop.getInventory();
-        inputInv.removeItem(input);
+
     }
 }
 
@@ -155,7 +97,7 @@ public final class EventListener implements Listener {
             if (mySM != null) {
                 switch (actionType){
                     case "input":
-                        mySM.processInput(e.getItem());
+                        e.setCancelled(!(mySM.processInput(e.getItem())));
                         break;
                     case "fuel":
                         e.setCancelled(!(mySM.processFuel(e.getItem())));
