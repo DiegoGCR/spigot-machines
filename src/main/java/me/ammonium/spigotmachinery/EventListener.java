@@ -26,8 +26,10 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.*;
+import java.util.Collections;
 
 import static me.ammonium.spigotmachinery.SpigotMachinery.mfList;
 
@@ -70,9 +72,45 @@ class MechanicalFurnace extends SpigotMachine {
     }
 }
 
+class BlastFurnace extends SpigotMachine {
+    private int ironCount = 0;
+    private ItemStack steel = new ItemStack(Material.IRON_INGOT);
+    public BlastFurnace() {
+        ItemMeta steelMeta = steel.getItemMeta();
+        steelMeta.setDisplayName(ChatColor.GRAY + "Steel Ingot");
+        steelMeta.setLore(Collections.singletonList(ChatColor.AQUA + "SpigotMachinery Ingredient"));
+        steel.setItemMeta(steelMeta);
+    }
+
+    @Override
+    boolean processInput(ItemStack input) {
+        // Add iron to ironCount
+        if (input.getType().equals(Material.IRON_INGOT) && fuelRemaining > 0) {
+            Hopper inputHop = (Hopper) Location.deserialize(inputHopperLoc).getBlock().getState();
+            Inventory inputInv = inputHop.getInventory();
+            inputInv.removeItem(input);
+            ironCount++;
+            fuelRemaining--;
+
+            // If theres 5+ iron, make steel and decrease ironCount
+            if (ironCount >= 5) {
+                Hopper outputHop = (Hopper) Location.deserialize(outputHopperLoc).getBlock().getState();
+                Inventory output = outputHop.getInventory();
+                output.addItem(steel);
+                ironCount -= 5;
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+}
+
 
 public final class EventListener implements Listener {
-    private File file = new File("plugins/SpigotMachinery/mf.schematic");
+    private File mf_file = new File("plugins/SpigotMachinery/mf.schematic");
+    private File bf_file = new File("plugins/SpigotMachinery/mf.schematic"); // TODO: give custom schematic
 
     @EventHandler
     public void onHopperMove(InventoryMoveItemEvent e) {
@@ -122,19 +160,14 @@ public final class EventListener implements Listener {
         if (e.hasItem()) {
             try {
                 ItemStack item = e.getItem();
+
                 if (item.getItemMeta().getDisplayName().equals(ChatColor.GOLD + "Mechanical Furnace")) {
                     e.getPlayer().sendMessage(ChatColor.DARK_BLUE + "Summoning Mechanical Furnace...");
-
-                    try {
-                        player.getInventory().removeItem(item);
-                    } catch (IllegalArgumentException iae) {
-                        System.out.println("An unexpected error occured while attempting to remove item:");
-                        iae.printStackTrace();
-                    }
+                    player.getInventory().removeItem(item);
 
                     // Paste MF schematic
                     WorldData worldData = world.getWorldData();
-                    Clipboard clipboard = ClipboardFormat.SCHEMATIC.getReader(new FileInputStream(file)).read(worldData);
+                    Clipboard clipboard = ClipboardFormat.SCHEMATIC.getReader(new FileInputStream(mf_file)).read(worldData);
                     EditSession extent = WorldEdit.getInstance().getEditSessionFactory().getEditSession(world, -1);
                     AffineTransform transform = new AffineTransform();
                     ForwardExtentCopy copy = new ForwardExtentCopy(clipboard, clipboard.getRegion(), clipboard.getOrigin(), extent, position);
@@ -158,6 +191,39 @@ public final class EventListener implements Listener {
                     temp.setMachineTop(machineTop);
                     temp.setCoreBlock(coreBlock);
                     mfList.add(temp);
+                }
+                else if (item.getItemMeta().getDisplayName().equals(ChatColor.GOLD + "Blast Furnace")) {
+                    e.getPlayer().sendMessage(ChatColor.DARK_BLUE + "Summoning Blast Furnace...");
+                    player.getInventory().removeItem(item);
+
+                    // Paste MF schematic
+                    WorldData worldData = world.getWorldData();
+                    Clipboard clipboard = ClipboardFormat.SCHEMATIC.getReader(new FileInputStream(bf_file)).read(worldData);
+                    EditSession extent = WorldEdit.getInstance().getEditSessionFactory().getEditSession(world, -1);
+                    AffineTransform transform = new AffineTransform();
+                    ForwardExtentCopy copy = new ForwardExtentCopy(clipboard, clipboard.getRegion(), clipboard.getOrigin(), extent, position);
+                    if (!transform.isIdentity()) copy.setTransform(transform);
+                    copy.setSourceMask(new ExistingBlockMask(clipboard));
+                    Operations.completeLegacy(copy);
+                    extent.flushQueue();
+
+                    // Get location of inputHopper, outputHopper, and fuelHopper
+                    // TODO: Adjust coordinates according to custom schematic
+                    Location inputHopper = new Location(player.getWorld(), (loc.getBlockX() - 2), (loc.getBlockY() + 2), (loc.getBlockZ() - 4));
+                    Location outputHopper = new Location(player.getWorld(), (loc.getBlockX() + 3), (loc.getBlockY() + 2), (loc.getBlockZ() - 4));
+                    Location fuelHopper = new Location(player.getWorld(), (loc.getBlockX() - 1), (loc.getBlockY() + 5), (loc.getBlockZ() - 4));
+                    Location machineBottom = new Location(player.getWorld(), (loc.getBlockX() - 2), (loc.getBlockY()), (loc.getBlockZ() - 3));
+                    Location machineTop = new Location(player.getWorld(), (loc.getBlockX() + 3), (loc.getBlockY() + 5), (loc.getBlockZ() - 5));
+                    Location coreBlock = new Location(player.getWorld(), (loc.getBlockX()), (loc.getBlockY() + 1), (loc.getBlockZ() - 3));
+                    MechanicalFurnace temp = new MechanicalFurnace();
+                    temp.setFuelHopperLoc(fuelHopper);
+                    temp.setInputHopperLoc(inputHopper);
+                    temp.setOutputHopperLoc(outputHopper);
+                    temp.setMachineBottom(machineBottom);
+                    temp.setMachineTop(machineTop);
+                    temp.setCoreBlock(coreBlock);
+                    mfList.add(temp);
+
                 }
             } catch (NullPointerException ignored) {
                 // Ignored. Reason: doesn't happen with summoners

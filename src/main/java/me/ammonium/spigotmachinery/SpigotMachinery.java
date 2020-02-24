@@ -12,30 +12,45 @@ import java.util.Collections;
 import java.util.List;
 
 
-
 public final class SpigotMachinery extends JavaPlugin {
-
     private File savedMachines = new File("plugins/SpigotMachinery/savedMachines.data");
     static List<SpigotMachine> mfList = new ArrayList<>();
 
     @Override
     public void onEnable() {
         // Plugin startup logic
-        ItemStack MFSummoner = new ItemStack(Material.PAPER);
-        ItemMeta meta = MFSummoner.getItemMeta();
-        meta.setDisplayName(ChatColor.GOLD + "Mechanical Furnace");
-        meta.setLore(Collections.singletonList(ChatColor.AQUA + "Right click to place!"));
-        MFSummoner.setItemMeta(meta);
+        ItemStack mfSummoner = new ItemStack(Material.PAPER);
+        ItemMeta mfSummonerItemMeta = mfSummoner.getItemMeta();
+        mfSummonerItemMeta.setDisplayName(ChatColor.GOLD + "Mechanical Furnace");
+        mfSummonerItemMeta.setLore(Collections.singletonList(ChatColor.AQUA + "Right click to place!"));
+        mfSummoner.setItemMeta(mfSummonerItemMeta);
 
-        NamespacedKey key = new NamespacedKey(this, "MFSummoner");
-        ShapedRecipe recipe = new ShapedRecipe(key, MFSummoner);
+        NamespacedKey mfKey = new NamespacedKey(this, "mfSummoner");
+        ShapedRecipe mfRecipe = new ShapedRecipe(mfKey, mfSummoner);
+        mfRecipe.shape("IBI", "IPI", "IRI");
+        mfRecipe.setIngredient('I', Material.IRON_INGOT);
+        mfRecipe.setIngredient('P', Material.FURNACE);
+        mfRecipe.setIngredient('B', Material.PISTON_BASE);
+        mfRecipe.setIngredient('R', Material.REDSTONE);
+
+        Bukkit.addRecipe(mfRecipe);
+
+        ItemStack bfSummoner = new ItemStack(Material.PAPER);
+        ItemMeta bfSummonerItemMeta = bfSummoner.getItemMeta();
+        bfSummonerItemMeta.setDisplayName(ChatColor.GOLD + "Blast Furnace");
+        bfSummonerItemMeta.setLore(Collections.singletonList(ChatColor.AQUA + "Right click to place!"));
+        bfSummoner.setItemMeta(bfSummonerItemMeta);
+
+        NamespacedKey bfKey = new NamespacedKey(this, "bfSummoner");
+        ShapedRecipe recipe = new ShapedRecipe(bfKey, bfSummoner);
         recipe.shape("IBI", "IPI", "IRI");
-        recipe.setIngredient('I', Material.IRON_INGOT);
+        recipe.setIngredient('I', Material.IRON_BLOCK);
         recipe.setIngredient('P', Material.FURNACE);
         recipe.setIngredient('B', Material.PISTON_BASE);
         recipe.setIngredient('R', Material.REDSTONE);
 
         Bukkit.addRecipe(recipe);
+
         getServer().getPluginManager().registerEvents(new EventListener(), this);
 
         if (savedMachines.exists()) {
@@ -52,7 +67,7 @@ public final class SpigotMachinery extends JavaPlugin {
                 System.out.println("Critical error, printing stack trace...");
                 e.printStackTrace();
             }
-            System.out.println("Successfully loaded " + mfList.size() + "SpigotMachines");
+            System.out.println("Successfully loaded " + mfList.size() + " SpigotMachines");
 
         }
     }
