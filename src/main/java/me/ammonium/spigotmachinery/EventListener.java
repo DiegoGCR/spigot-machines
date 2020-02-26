@@ -37,7 +37,7 @@ import static me.ammonium.spigotmachinery.SpigotMachinery.mfList;
 class MechanicalFurnace extends SpigotMachine {
 
     @Override
-    boolean processInput(ItemStack input) {
+    boolean processInput(ItemStack input, Location inputLoc) {
         // Check if input has a product
         Material product = null;
         int amount = 0;
@@ -61,7 +61,7 @@ class MechanicalFurnace extends SpigotMachine {
             Hopper outputHop = (Hopper) Location.deserialize(outputHopperLoc).getBlock().getState();
             Inventory output = outputHop.getInventory();
             output.addItem(new ItemStack(product, amount));
-            Hopper inputHop = (Hopper) Location.deserialize(inputHopperLoc).getBlock().getState();
+            Hopper inputHop = (Hopper) inputLoc.getBlock().getState();
             Inventory inputInv = inputHop.getInventory();
             inputInv.removeItem(input);
             return true;
@@ -83,10 +83,10 @@ class BlastFurnace extends SpigotMachine {
     }
 
     @Override
-    boolean processInput(ItemStack input) {
+    boolean processInput(ItemStack input, Location inputLoc) {
         // Add iron to ironCount
         if (input.getType().equals(Material.IRON_INGOT) && fuelRemaining > 0) {
-            Hopper inputHop = (Hopper) Location.deserialize(inputHopperLoc).getBlock().getState();
+            Hopper inputHop = (Hopper) inputLoc.getBlock().getState();
             Inventory inputInv = inputHop.getInventory();
             inputInv.removeItem(input);
             ironCount++;
@@ -107,10 +107,12 @@ class BlastFurnace extends SpigotMachine {
 
 }
 
+// class Assembler extends SpigotMachine
+
 
 public final class EventListener implements Listener {
     private File mf_file = new File("plugins/SpigotMachinery/mf.schematic");
-    private File bf_file = new File("plugins/SpigotMachinery/mf.schematic"); // TODO: give custom schematic
+    private File bf_file = new File("plugins/SpigotMachinery/bf.schematic");
 
     @EventHandler
     public void onHopperMove(InventoryMoveItemEvent e) {
@@ -119,15 +121,17 @@ public final class EventListener implements Listener {
 
         if (source.getType().equals(InventoryType.HOPPER) && mfList.size() > 0){
             SpigotMachine mySM = null;
-            for (SpigotMachine mechanicalFurnace : mfList) {
-                Location tempinput = mechanicalFurnace.getInputHopperLoc();
-                Location tempFuel = mechanicalFurnace.getFuelHopperLoc();
+            Location inputLoc = null;
+            for (SpigotMachine spigotMachine : mfList) {
+                Location tempinput = spigotMachine.getInputHopperLoc();
+                Location tempFuel = spigotMachine.getFuelHopperLoc();
                 if (source.getLocation().equals(tempinput)) {
-                    mySM = mechanicalFurnace;
+                    mySM = spigotMachine;
+                    inputLoc = tempinput;
                     actionType = "input";
                     break;
                 } else if (source.getLocation().equals(tempFuel)) {
-                    mySM = mechanicalFurnace;
+                    mySM = spigotMachine;
                     actionType = "fuel";
                     break;
                 }
@@ -135,7 +139,7 @@ public final class EventListener implements Listener {
             if (mySM != null) {
                 switch (actionType){
                     case "input":
-                        e.setCancelled(!(mySM.processInput(e.getItem())));
+                        e.setCancelled(!(mySM.processInput(e.getItem(), inputLoc)));
                         break;
                     case "fuel":
                         e.setCancelled(!(mySM.processFuel(e.getItem())));
@@ -160,7 +164,6 @@ public final class EventListener implements Listener {
         if (e.hasItem()) {
             try {
                 ItemStack item = e.getItem();
-
                 if (item.getItemMeta().getDisplayName().equals(ChatColor.GOLD + "Mechanical Furnace")) {
                     e.getPlayer().sendMessage(ChatColor.DARK_BLUE + "Summoning Mechanical Furnace...");
                     player.getInventory().removeItem(item);
@@ -208,12 +211,11 @@ public final class EventListener implements Listener {
                     extent.flushQueue();
 
                     // Get location of inputHopper, outputHopper, and fuelHopper
-                    // TODO: Adjust coordinates according to custom schematic
                     Location inputHopper = new Location(player.getWorld(), (loc.getBlockX() - 2), (loc.getBlockY() + 2), (loc.getBlockZ() - 4));
-                    Location outputHopper = new Location(player.getWorld(), (loc.getBlockX() + 3), (loc.getBlockY() + 2), (loc.getBlockZ() - 4));
-                    Location fuelHopper = new Location(player.getWorld(), (loc.getBlockX() - 1), (loc.getBlockY() + 5), (loc.getBlockZ() - 4));
+                    Location outputHopper = new Location(player.getWorld(), (loc.getBlockX() + 5), (loc.getBlockY() + 2), (loc.getBlockZ() - 4));
+                    Location fuelHopper = new Location(player.getWorld(), (loc.getBlockX()), (loc.getBlockY() + 2), (loc.getBlockZ() - 5));
                     Location machineBottom = new Location(player.getWorld(), (loc.getBlockX() - 2), (loc.getBlockY()), (loc.getBlockZ() - 3));
-                    Location machineTop = new Location(player.getWorld(), (loc.getBlockX() + 3), (loc.getBlockY() + 5), (loc.getBlockZ() - 5));
+                    Location machineTop = new Location(player.getWorld(), (loc.getBlockX() + 5), (loc.getBlockY() + 3), (loc.getBlockZ() - 5));
                     Location coreBlock = new Location(player.getWorld(), (loc.getBlockX()), (loc.getBlockY() + 1), (loc.getBlockZ() - 3));
                     MechanicalFurnace temp = new MechanicalFurnace();
                     temp.setFuelHopperLoc(fuelHopper);
@@ -226,6 +228,7 @@ public final class EventListener implements Listener {
 
                 }
             } catch (NullPointerException ignored) {
+                System.out.println("NullPointerException ignored");
                 // Ignored. Reason: doesn't happen with summoners
             }
         }

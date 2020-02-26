@@ -71,7 +71,7 @@ public class SpigotMachine implements Serializable {
         }
     }
 
-    boolean processInput(ItemStack input) {
+    boolean processInput(ItemStack input, Location inputLoc) {
         return false;
     }
 }
