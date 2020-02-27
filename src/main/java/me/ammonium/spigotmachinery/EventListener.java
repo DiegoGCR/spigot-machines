@@ -116,11 +116,12 @@ class BlastFurnace extends SpigotMachine {
 }
 
 class Assembler extends SpigotMachine implements InventoryHolder {
-    Map<String, Object> input2HopperLoc;
-    Map<String, Object> input3HopperLoc;
-    int steelCount = 0;
-    String recipe = null;
+    private Map<String, Object> input2HopperLoc;
+    private Map<String, Object> input3HopperLoc;
     private Inventory inv;
+    private int steelCount = 0;
+    private String recipe = null;
+
 
     void setInput2HopperLoc(Location inputHopperLoc) {
         this.input2HopperLoc = inputHopperLoc.serialize();
@@ -470,7 +471,7 @@ public final class EventListener implements Listener {
         if(e.getInventory().getHolder() instanceof Assembler) {
             Assembler assembler = (Assembler) e.getInventory().getHolder();
             System.out.println("This is an assembler selection gui");
-            int slot = e.getSlot();
+            int slot = e.getRawSlot();
             System.out.println(slot);
             switch(slot) {
                 case 0:
