@@ -4,25 +4,31 @@ This spigot plugin has only been tested with **Minecraft 1.12.2**. If you have t
 not.
 
 ## What is it?
-This spigot plugin adds a single machine, the Mechanical Furnace (MF), which is a physical structure that can be interacted with 
+This plugin adds many "Spigot Machines", which are physical structures that can be interacted with 
 directly via the use of hoppers.
 
 ## How does it work?
-The mechanical furnace has three hoppers: 
-* The top one, the fuel hopper, is where you input either coal or a coal block to fuel it.
+SpigotMachines have three basic hoppers: 
+* The fuel hopper, is where you input either coal or a coal block to fuel it.
 Coal can do 6 operations while a coal block can do 54.
-* The left one is the input hopper. Here you can input any compatible items.
-* The right one is the output. Here is where any compatible products will appear
+* The input hopper. Here you can input any compatible items.
+* The output hopper. Here is where any compatible products will appear
 **Please note that you can't input directly to the hoppers! Use chests or other hoppers**
 
 ## What can it do?
-As of right now, the MF can only process 4 materials:
+As of right now, there are three basic SpigotMachines:
+
+The MechanicalFurnace can process 4 materials:
 * Converts 1 iron ore to 2 iron ingot
 * Converts 1 gold ore to 2 gold ingot
 * Converts 1 cobblestone to 1 stone
 * Converts 1 redstone to 1 obsidian
 
-## How do I create a MF?
+The BlastFurnace can process 5 iron ingots into 1 steel ingot.
+
+Assemblers exist yet they have no recipes for now.
+
+## How do I create a SM?
 1. Obtain the summoner by crafting it with the recipe shown below:
 ![Crafting Recipe](https://i.imgur.com/ZF5uQ2k.png)
 2. Right click the summoner to place it. (Note: as of now, MFs will only place North of the player)
