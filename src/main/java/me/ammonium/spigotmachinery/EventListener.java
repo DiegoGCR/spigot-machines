@@ -13,26 +13,31 @@ import com.sk89q.worldedit.function.operation.Operations;
 import com.sk89q.worldedit.math.transform.AffineTransform;
 import com.sk89q.worldedit.world.World;
 import com.sk89q.worldedit.world.registry.WorldData;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Hopper;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 
-import static me.ammonium.spigotmachinery.SpigotMachinery.mfList;
+import static me.ammonium.spigotmachinery.SpigotMachinery.smList;
 
 
 class MechanicalFurnace extends SpigotMachine {
@@ -104,26 +109,26 @@ class BlastFurnace extends SpigotMachine {
                 output.addItem(steel);
                 ironCount -= 5;
             }
-        } else {
-            System.out.println(input.getType());
-
         }
         return result;
     }
 
 }
 
-// TODO: Add recipes and selection GUI to Assembler
 class Assembler extends SpigotMachine {
     Map<String, Object> input2HopperLoc;
     Map<String, Object> input3HopperLoc;
     int steelCount = 0;
+    String recipe = null;
 
     void setInput2HopperLoc(Location inputHopperLoc) {
         this.input2HopperLoc = inputHopperLoc.serialize();
     }
     void setInput3HopperLoc(Location inputHopperLoc) {
         this.input3HopperLoc = inputHopperLoc.serialize();
+    }
+    void setRecipe(String recipe) {
+        this.recipe = recipe;
     }
 
     Location getInput2HopperLoc() {
@@ -136,8 +141,10 @@ class Assembler extends SpigotMachine {
     @Override
     boolean processInput(ItemStack input, Location inputLoc) {
         boolean result = false;
+        Hopper outputHop = (Hopper) Location.deserialize(outputHopperLoc).getBlock().getState();
+        Inventory output = outputHop.getInventory();
         try{
-            if(input.getItemMeta().getDisplayName().equals(ChatColor.GRAY + "Steel Ingot")) {
+            if(input.getItemMeta().getDisplayName().equals(ChatColor.GRAY + "Steel Ingot") && steelCount < 20) {
                 result = true;
                 steelCount += input.getAmount();
                 Hopper inputHop = (Hopper) inputLoc.getBlock().getState();
@@ -148,25 +155,140 @@ class Assembler extends SpigotMachine {
         } catch (NullPointerException ignored) {
             // Ignored. Reason: doesn't happen with custom items
         }
+
+        switch(recipe) {
+            case "steel helmet":
+                if(steelCount >= 5) {
+                    ItemStack steelHelmet = new ItemStack(Material.IRON_HELMET);
+                    ItemMeta steelHelmetMeta = steelHelmet.getItemMeta();
+                    steelHelmetMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 5, true);
+                    steelHelmetMeta.addEnchant(Enchantment.DURABILITY, 6, true);
+                    steelHelmetMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 5, true);
+                    steelHelmetMeta.setDisplayName(ChatColor.GRAY + "Steel Helmet");
+                    output.addItem(steelHelmet);
+                    steelCount -= 5;
+
+                }
+                break;
+
+            case "steel chestplate":
+                if(steelCount >= 8) {
+                    ItemStack steelChestplate = new ItemStack(Material.IRON_CHESTPLATE);
+                    ItemMeta steelChestplateMeta = steelChestplate.getItemMeta();
+                    steelChestplateMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 5, true);
+                    steelChestplateMeta.addEnchant(Enchantment.DURABILITY, 6, true);
+                    steelChestplateMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 5, true);
+                    steelChestplateMeta.setDisplayName(ChatColor.GRAY + "Steel Chestplate");
+                    output.addItem(steelChestplate);
+                    steelCount -= 5;
+                }
+                break;
+
+            case "steel leggings":
+                if(steelCount >= 7) {
+                    ItemStack steelLeggings = new ItemStack(Material.IRON_LEGGINGS);
+                    ItemMeta steelLeggingsMeta = steelLeggings.getItemMeta();
+                    steelLeggingsMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 5, true);
+                    steelLeggingsMeta.addEnchant(Enchantment.DURABILITY, 6, true);
+                    steelLeggingsMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 5, true);
+                    steelLeggingsMeta.setDisplayName(ChatColor.GRAY + "Steel Helmet");
+                    output.addItem(steelLeggings);
+                    steelCount -= 5;
+                }
+                break;
+
+            case "steel boots":
+                if(steelCount >= 4) {
+                    ItemStack steelBoots = new ItemStack(Material.IRON_BOOTS);
+                    ItemMeta steelBootsMeta = steelBoots.getItemMeta();
+                    steelBootsMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 5, true);
+                    steelBootsMeta.addEnchant(Enchantment.DURABILITY, 6, true);
+                    steelBootsMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 5, true);
+                    steelBootsMeta.setDisplayName(ChatColor.GRAY + "Steel Boots");
+                    output.addItem(steelBoots);
+                    steelCount -= 5;
+                }
+                break;
+        }
         return result;
+    }
+}
+
+class AssemblerGUI implements InventoryHolder, Listener {
+    private Inventory inv;
+    private Assembler assembler;
+
+    public AssemblerGUI() {
+        inv = Bukkit.createInventory(this, 9, "Select a recipe");
+        ItemStack steelHelmetRecipe = new ItemStack(Material.IRON_HELMET);
+        ItemMeta steelHelmetRecipeMeta = steelHelmetRecipe.getItemMeta();
+        steelHelmetRecipeMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 5, true);
+        steelHelmetRecipeMeta.addEnchant(Enchantment.DURABILITY, 6, true);
+        steelHelmetRecipeMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 5, true);
+        steelHelmetRecipeMeta.setDisplayName(ChatColor.GRAY + "Steel Helmet");
+        steelHelmetRecipeMeta.setLore(Arrays.asList(ChatColor.GOLD + "Requires:", "5 steel ingots"));
+        steelHelmetRecipe.setItemMeta(steelHelmetRecipeMeta);
+        inv.addItem(steelHelmetRecipe);
+        ItemStack steelChestplateRecipe = new ItemStack(Material.IRON_CHESTPLATE);
+        ItemMeta steelChestplateRecipeMeta = steelChestplateRecipe.getItemMeta();
+        steelChestplateRecipeMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 5, true);
+        steelChestplateRecipeMeta.addEnchant(Enchantment.DURABILITY, 6, true);
+        steelChestplateRecipeMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 5, true);
+        steelChestplateRecipeMeta.setDisplayName(ChatColor.GRAY + "Steel Chestplate");
+        steelChestplateRecipeMeta.setLore(Arrays.asList(ChatColor.GOLD + "Requires:", "8 steel ingots"));
+        steelChestplateRecipe.setItemMeta(steelChestplateRecipeMeta);
+        inv.addItem(steelChestplateRecipe);
+        ItemStack steelLeggingsRecipe = new ItemStack(Material.IRON_LEGGINGS);
+        ItemMeta steelLeggingsRecipeMeta = steelLeggingsRecipe.getItemMeta();
+        steelLeggingsRecipeMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 5, true);
+        steelLeggingsRecipeMeta.addEnchant(Enchantment.DURABILITY, 6, true);
+        steelLeggingsRecipeMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 5, true);
+        steelLeggingsRecipeMeta.setDisplayName(ChatColor.GRAY + "Steel Leggings");
+        steelLeggingsRecipeMeta.setLore(Arrays.asList(ChatColor.GOLD + "Requires:", "7 steel ingots"));
+        steelLeggingsRecipe.setItemMeta(steelLeggingsRecipeMeta);
+        inv.addItem(steelLeggingsRecipe);
+        ItemStack steelBootsRecipe = new ItemStack(Material.IRON_BOOTS);
+        ItemMeta steelBootsRecipeMeta = steelBootsRecipe.getItemMeta();
+        steelBootsRecipeMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 5, true);
+        steelBootsRecipeMeta.addEnchant(Enchantment.DURABILITY, 6, true);
+        steelBootsRecipeMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 5, true);
+        steelBootsRecipeMeta.setDisplayName(ChatColor.GRAY + "Steel Boots");
+        steelBootsRecipeMeta.setLore(Arrays.asList(ChatColor.GOLD + "Requires:", "4 steel ingots"));
+        steelBootsRecipe.setItemMeta(steelBootsRecipeMeta);
+        inv.addItem(steelBootsRecipe);
+    }
+
+    public void setAssembler(Assembler assembler) {
+        this.assembler = assembler;
+    }
+    public Assembler getAssembler() {
+        return assembler;
+    }
+
+    public void openInventory(Player p) {
+        p.openInventory(inv);
+    }
+    @Override
+    public Inventory getInventory() {
+        return inv;
     }
 }
 
 
 public final class EventListener implements Listener {
-    private File mf_file = new File("plugins/SpigotMachinery/mf.schematic");
-    private File bf_file = new File("plugins/SpigotMachinery/bf.schematic");
-    private File asm_file = new File("plugins/SpigotMachinery/basm.schematic");
+    private File mfFile = new File("plugins/SpigotMachinery/mf.schematic");
+    private File bfFile = new File("plugins/SpigotMachinery/bf.schematic");
+    private File asmFile = new File("plugins/SpigotMachinery/basm.schematic");
 
     @EventHandler
     public void onHopperMove(InventoryMoveItemEvent e) {
         Inventory source = e.getDestination();
         String actionType = null;
 
-        if (source.getType().equals(InventoryType.HOPPER) && mfList.size() > 0){
+        if (source.getType().equals(InventoryType.HOPPER) && smList.size() > 0){
             SpigotMachine mySM = null;
             Location inputLoc = null;
-            for (SpigotMachine spigotMachine : mfList) {
+            for (SpigotMachine spigotMachine : smList) {
                 Location tempinput = spigotMachine.getInputHopperLoc();
                 Location tempFuel = spigotMachine.getFuelHopperLoc();
                 if (source.getLocation().equals(tempinput)) {
@@ -209,13 +331,14 @@ public final class EventListener implements Listener {
         if (e.hasItem()) {
             try {
                 ItemStack item = e.getItem();
+                item.setAmount(1);
                 if (item.getItemMeta().getDisplayName().equals(ChatColor.GOLD + "Mechanical Furnace")) {
                     e.getPlayer().sendMessage(ChatColor.DARK_BLUE + "Summoning Mechanical Furnace...");
                     player.getInventory().removeItem(item);
 
                     // Paste MF schematic
                     WorldData worldData = world.getWorldData();
-                    Clipboard clipboard = ClipboardFormat.SCHEMATIC.getReader(new FileInputStream(mf_file)).read(worldData);
+                    Clipboard clipboard = ClipboardFormat.SCHEMATIC.getReader(new FileInputStream(mfFile)).read(worldData);
                     EditSession extent = WorldEdit.getInstance().getEditSessionFactory().getEditSession(world, -1);
                     AffineTransform transform = new AffineTransform();
                     ForwardExtentCopy copy = new ForwardExtentCopy(clipboard, clipboard.getRegion(), clipboard.getOrigin(), extent, position);
@@ -238,15 +361,15 @@ public final class EventListener implements Listener {
                     temp.setMachineBottom(machineBottom);
                     temp.setMachineTop(machineTop);
                     temp.setCoreBlock(coreBlock);
-                    mfList.add(temp);
+                    smList.add(temp);
                 }
                 else if (item.getItemMeta().getDisplayName().equals(ChatColor.GOLD + "Blast Furnace")) {
                     e.getPlayer().sendMessage(ChatColor.DARK_BLUE + "Summoning Blast Furnace...");
-                    player.getInventory().removeItem(item);
+                    player.getInventory().addItem();
 
                     // Paste MF schematic
                     WorldData worldData = world.getWorldData();
-                    Clipboard clipboard = ClipboardFormat.SCHEMATIC.getReader(new FileInputStream(bf_file)).read(worldData);
+                    Clipboard clipboard = ClipboardFormat.SCHEMATIC.getReader(new FileInputStream(bfFile)).read(worldData);
                     EditSession extent = WorldEdit.getInstance().getEditSessionFactory().getEditSession(world, -1);
                     AffineTransform transform = new AffineTransform();
                     ForwardExtentCopy copy = new ForwardExtentCopy(clipboard, clipboard.getRegion(), clipboard.getOrigin(), extent, position);
@@ -269,7 +392,7 @@ public final class EventListener implements Listener {
                     temp.setMachineBottom(machineBottom);
                     temp.setMachineTop(machineTop);
                     temp.setCoreBlock(coreBlock);
-                    mfList.add(temp);
+                    smList.add(temp);
 
                 }
                 else if (item.getItemMeta().getDisplayName().equals(ChatColor.GOLD + "Assenvbler")) {
@@ -278,7 +401,7 @@ public final class EventListener implements Listener {
 
                     // Paste MF schematic
                     WorldData worldData = world.getWorldData();
-                    Clipboard clipboard = ClipboardFormat.SCHEMATIC.getReader(new FileInputStream(bf_file)).read(worldData);
+                    Clipboard clipboard = ClipboardFormat.SCHEMATIC.getReader(new FileInputStream(bfFile)).read(worldData);
                     EditSession extent = WorldEdit.getInstance().getEditSessionFactory().getEditSession(world, -1);
                     AffineTransform transform = new AffineTransform();
                     ForwardExtentCopy copy = new ForwardExtentCopy(clipboard, clipboard.getRegion(), clipboard.getOrigin(), extent, position);
@@ -305,11 +428,22 @@ public final class EventListener implements Listener {
                     temp.setMachineBottom(machineBottom);
                     temp.setMachineTop(machineTop);
                     temp.setCoreBlock(coreBlock);
-                    mfList.add(temp);
+                    smList.add(temp);
 
                 }
             } catch (NullPointerException ignored) {
                 // Ignored. Reason: doesn't happen with custom items
+            }
+        } else {
+            Location clickedLoc = e.getClickedBlock().getLocation();
+            for (SpigotMachine spigotMachine: smList) {
+                if (spigotMachine instanceof Assembler && spigotMachine.getCoreBlock().equals(clickedLoc)) {
+                    // Open selection GUI
+                    AssemblerGUI temp = new AssemblerGUI();
+                    temp.openInventory(e.getPlayer());
+
+                    break;
+                }
             }
         }
     }
@@ -317,18 +451,18 @@ public final class EventListener implements Listener {
     @EventHandler
     public void onBlockBreak(BlockBreakEvent e) {
         Location breakLocation = e.getBlock().getLocation();
-        if (mfList != null) {
-            for (int i = 0; i < mfList.size(); i++) {
-                Location coreBlock = mfList.get(i).getCoreBlock();
+        if (smList != null) {
+            for (int i = 0; i < smList.size(); i++) {
+                Location coreBlock = smList.get(i).getCoreBlock();
                 if (breakLocation.equals(coreBlock)) {
-                    mfList.remove(i);
+                    smList.remove(i);
                     e.getPlayer().sendMessage(ChatColor.AQUA + "This SM has been disabled");
                     break;
-                } else if (breakLocation.getBlockX() >= mfList.get(i).getMachineBottom().getBlockX() && breakLocation.getBlockX() <= mfList.get(i)
+                } else if (breakLocation.getBlockX() >= smList.get(i).getMachineBottom().getBlockX() && breakLocation.getBlockX() <= smList.get(i)
                         .getMachineTop().getBlockX() &&
-                        breakLocation.getBlockY() >= mfList.get(i).getMachineBottom().getBlockY() && breakLocation.getBlockY() <= mfList.get(i)
+                        breakLocation.getBlockY() >= smList.get(i).getMachineBottom().getBlockY() && breakLocation.getBlockY() <= smList.get(i)
                         .getMachineTop().getBlockY() &&
-                        breakLocation.getBlockZ() <= mfList.get(i).getMachineBottom().getBlockZ() && breakLocation.getBlockZ() >= mfList.get(i)
+                        breakLocation.getBlockZ() <= smList.get(i).getMachineBottom().getBlockZ() && breakLocation.getBlockZ() >= smList.get(i)
                         .getMachineTop().getBlockY()) {
                     e.getPlayer().sendMessage(ChatColor.AQUA + "You can't mine this block! Break the obsidian to disable this.");
                     e.setCancelled(true);
@@ -337,5 +471,37 @@ public final class EventListener implements Listener {
             }
         }
     }
+
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent e) {
+        if(e.getInventory().getHolder() instanceof AssemblerGUI) {
+            AssemblerGUI asmGUI = (AssemblerGUI) e.getInventory().getHolder();
+            System.out.println("This is an assembler selection gui");
+            int slot = e.getSlot();
+            System.out.println(slot);
+            switch(slot) {
+                case 0:
+                    asmGUI.getAssembler().setRecipe("steel helmet");
+                    e.getWhoClicked().sendMessage(ChatColor.AQUA + "Set recipe to steel helmet");
+                    break;
+
+                case 1:
+                    asmGUI.getAssembler().setRecipe("steel chestplate");
+                    e.getWhoClicked().sendMessage(ChatColor.AQUA + "Set recipe to steel chestplate");
+                    break;
+
+                case 2:
+                    asmGUI.getAssembler().setRecipe("steel leggings");
+                    e.getWhoClicked().sendMessage(ChatColor.AQUA + "Set recipe to steel leggings");
+                    break;
+
+                case 3:
+                    asmGUI.getAssembler().setRecipe("steel boots");
+                    e.getWhoClicked().sendMessage(ChatColor.AQUA + "Set recipe to steel boots");
+                    break;
+            }
+        }
+    }
+
 }
 

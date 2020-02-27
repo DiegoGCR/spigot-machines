@@ -14,7 +14,7 @@ import java.util.List;
 
 public final class SpigotMachinery extends JavaPlugin {
     private File savedMachines = new File("plugins/SpigotMachinery/savedMachines.data");
-    static List<SpigotMachine> mfList = new ArrayList<>();
+    static List<SpigotMachine> smList = new ArrayList<>();
 
     @Override
     public void onEnable() {
@@ -78,14 +78,14 @@ public final class SpigotMachinery extends JavaPlugin {
                 // FileOutputStream fos = new FileOutputStream("plugins/SpigotMachinery/savedMachines.data");
                 ObjectInputStream ois = new ObjectInputStream(fis);
                 System.out.println("OIS ready");
-                mfList = (List<SpigotMachine>) ois.readObject();
-                System.out.println(mfList.size() + " objects found");
+                smList = (List<SpigotMachine>) ois.readObject();
+                System.out.println(smList.size() + " objects found");
                 ois.close();
             } catch (IOException | ClassNotFoundException e) {
                 System.out.println("Critical error, printing stack trace...");
                 e.printStackTrace();
             }
-            System.out.println("Successfully loaded " + mfList.size() + " SpigotMachines");
+            System.out.println("Successfully loaded " + smList.size() + " SpigotMachines");
 
         }
     }
@@ -93,8 +93,8 @@ public final class SpigotMachinery extends JavaPlugin {
     @Override
     public void onDisable() {
         // Plugin shutdown logic
-        if (mfList.size() > 0) {
-            System.out.println("Found " + mfList.size() + " SpigotMachine(s) on server, saving on file...");
+        if (smList.size() > 0) {
+            System.out.println("Found " + smList.size() + " SpigotMachine(s) on server, saving on file...");
 
             if (!savedMachines.exists()) {
                 System.out.println("No file found on disable, making one...");
@@ -111,7 +111,7 @@ public final class SpigotMachinery extends JavaPlugin {
                 System.out.println("Saving on savedMachines.tmp ...");
                 FileOutputStream fos = new FileOutputStream("plugins/SpigotMachinery/savedMachines.data");
                 ObjectOutputStream oos = new ObjectOutputStream(fos);
-                oos.writeObject(mfList);
+                oos.writeObject(smList);
                 oos.close();
             } catch (IOException e) {
                 System.out.println("Fatal error while writing file, printing stack trace:");
