@@ -115,11 +115,12 @@ class BlastFurnace extends SpigotMachine {
 
 }
 
-class Assembler extends SpigotMachine {
+class Assembler extends SpigotMachine implements InventoryHolder {
     Map<String, Object> input2HopperLoc;
     Map<String, Object> input3HopperLoc;
     int steelCount = 0;
     String recipe = null;
+    private Inventory inv;
 
     void setInput2HopperLoc(Location inputHopperLoc) {
         this.input2HopperLoc = inputHopperLoc.serialize();
@@ -130,6 +131,9 @@ class Assembler extends SpigotMachine {
     void setRecipe(String recipe) {
         this.recipe = recipe;
     }
+    void openInventory(Player p) {
+        p.openInventory(inv);
+    }
 
     Location getInput2HopperLoc() {
         return Location.deserialize(input2HopperLoc);
@@ -138,87 +142,7 @@ class Assembler extends SpigotMachine {
         return Location.deserialize(input3HopperLoc);
     }
 
-    @Override
-    boolean processInput(ItemStack input, Location inputLoc) {
-        boolean result = false;
-        Hopper outputHop = (Hopper) Location.deserialize(outputHopperLoc).getBlock().getState();
-        Inventory output = outputHop.getInventory();
-        try{
-            if(input.getItemMeta().getDisplayName().equals(ChatColor.GRAY + "Steel Ingot") && steelCount < 20) {
-                result = true;
-                steelCount += input.getAmount();
-                Hopper inputHop = (Hopper) inputLoc.getBlock().getState();
-                Inventory inputInv = inputHop.getInventory();
-                inputInv.removeItem(input);
-            }
-
-        } catch (NullPointerException ignored) {
-            // Ignored. Reason: doesn't happen with custom items
-        }
-
-        switch(recipe) {
-            case "steel helmet":
-                if(steelCount >= 5) {
-                    ItemStack steelHelmet = new ItemStack(Material.IRON_HELMET);
-                    ItemMeta steelHelmetMeta = steelHelmet.getItemMeta();
-                    steelHelmetMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 5, true);
-                    steelHelmetMeta.addEnchant(Enchantment.DURABILITY, 6, true);
-                    steelHelmetMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 5, true);
-                    steelHelmetMeta.setDisplayName(ChatColor.GRAY + "Steel Helmet");
-                    output.addItem(steelHelmet);
-                    steelCount -= 5;
-
-                }
-                break;
-
-            case "steel chestplate":
-                if(steelCount >= 8) {
-                    ItemStack steelChestplate = new ItemStack(Material.IRON_CHESTPLATE);
-                    ItemMeta steelChestplateMeta = steelChestplate.getItemMeta();
-                    steelChestplateMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 5, true);
-                    steelChestplateMeta.addEnchant(Enchantment.DURABILITY, 6, true);
-                    steelChestplateMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 5, true);
-                    steelChestplateMeta.setDisplayName(ChatColor.GRAY + "Steel Chestplate");
-                    output.addItem(steelChestplate);
-                    steelCount -= 5;
-                }
-                break;
-
-            case "steel leggings":
-                if(steelCount >= 7) {
-                    ItemStack steelLeggings = new ItemStack(Material.IRON_LEGGINGS);
-                    ItemMeta steelLeggingsMeta = steelLeggings.getItemMeta();
-                    steelLeggingsMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 5, true);
-                    steelLeggingsMeta.addEnchant(Enchantment.DURABILITY, 6, true);
-                    steelLeggingsMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 5, true);
-                    steelLeggingsMeta.setDisplayName(ChatColor.GRAY + "Steel Helmet");
-                    output.addItem(steelLeggings);
-                    steelCount -= 5;
-                }
-                break;
-
-            case "steel boots":
-                if(steelCount >= 4) {
-                    ItemStack steelBoots = new ItemStack(Material.IRON_BOOTS);
-                    ItemMeta steelBootsMeta = steelBoots.getItemMeta();
-                    steelBootsMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 5, true);
-                    steelBootsMeta.addEnchant(Enchantment.DURABILITY, 6, true);
-                    steelBootsMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 5, true);
-                    steelBootsMeta.setDisplayName(ChatColor.GRAY + "Steel Boots");
-                    output.addItem(steelBoots);
-                    steelCount -= 5;
-                }
-                break;
-        }
-        return result;
-    }
-}
-
-class AssemblerGUI implements InventoryHolder, Listener {
-    private Inventory inv;
-    private Assembler assembler;
-
-    public AssemblerGUI() {
+    public Assembler() {
         inv = Bukkit.createInventory(this, 9, "Select a recipe");
         ItemStack steelHelmetRecipe = new ItemStack(Material.IRON_HELMET);
         ItemMeta steelHelmetRecipeMeta = steelHelmetRecipe.getItemMeta();
@@ -258,19 +182,88 @@ class AssemblerGUI implements InventoryHolder, Listener {
         inv.addItem(steelBootsRecipe);
     }
 
-    public void setAssembler(Assembler assembler) {
-        this.assembler = assembler;
-    }
-    public Assembler getAssembler() {
-        return assembler;
-    }
-
-    public void openInventory(Player p) {
-        p.openInventory(inv);
-    }
     @Override
     public Inventory getInventory() {
         return inv;
+    }
+
+    @Override
+    boolean processInput(ItemStack input, Location inputLoc) {
+        boolean result = false;
+        Hopper outputHop = (Hopper) Location.deserialize(outputHopperLoc).getBlock().getState();
+        Inventory output = outputHop.getInventory();
+        try{
+            if(input.getItemMeta().getDisplayName().equals(ChatColor.GRAY + "Steel Ingot") && steelCount < 20) {
+                result = true;
+                steelCount += input.getAmount();
+                Hopper inputHop = (Hopper) inputLoc.getBlock().getState();
+                Inventory inputInv = inputHop.getInventory();
+                inputInv.removeItem(input);
+            }
+
+        } catch (NullPointerException ignored) {
+            // Ignored. Reason: doesn't happen with custom items
+        }
+
+        switch(recipe) {
+            case "steel helmet":
+                System.out.println("Making steel helmet");
+                if (steelCount >= 5) {
+                    ItemStack steelHelmet = new ItemStack(Material.IRON_HELMET);
+                    ItemMeta steelHelmetMeta = steelHelmet.getItemMeta();
+                    steelHelmetMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 5, true);
+                    steelHelmetMeta.addEnchant(Enchantment.DURABILITY, 6, true);
+                    steelHelmetMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 5, true);
+                    steelHelmetMeta.setDisplayName(ChatColor.GRAY + "Steel Helmet");
+                    output.addItem(steelHelmet);
+                    steelCount -= 5;
+
+                }
+                break;
+
+            case "steel chestplate":
+                System.out.println("Making steel chestplate");
+                if (steelCount >= 8) {
+                    ItemStack steelChestplate = new ItemStack(Material.IRON_CHESTPLATE);
+                    ItemMeta steelChestplateMeta = steelChestplate.getItemMeta();
+                    steelChestplateMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 5, true);
+                    steelChestplateMeta.addEnchant(Enchantment.DURABILITY, 6, true);
+                    steelChestplateMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 5, true);
+                    steelChestplateMeta.setDisplayName(ChatColor.GRAY + "Steel Chestplate");
+                    output.addItem(steelChestplate);
+                    steelCount -= 5;
+                }
+                break;
+
+            case "steel leggings":
+                System.out.println("Making steel leggings");
+                if(steelCount >= 7) {
+                    ItemStack steelLeggings = new ItemStack(Material.IRON_LEGGINGS);
+                    ItemMeta steelLeggingsMeta = steelLeggings.getItemMeta();
+                    steelLeggingsMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 5, true);
+                    steelLeggingsMeta.addEnchant(Enchantment.DURABILITY, 6, true);
+                    steelLeggingsMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 5, true);
+                    steelLeggingsMeta.setDisplayName(ChatColor.GRAY + "Steel Helmet");
+                    output.addItem(steelLeggings);
+                    steelCount -= 5;
+                }
+                break;
+
+            case "steel boots":
+                System.out.println("Making steel boots");
+                if(steelCount >= 4) {
+                    ItemStack steelBoots = new ItemStack(Material.IRON_BOOTS);
+                    ItemMeta steelBootsMeta = steelBoots.getItemMeta();
+                    steelBootsMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 5, true);
+                    steelBootsMeta.addEnchant(Enchantment.DURABILITY, 6, true);
+                    steelBootsMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 5, true);
+                    steelBootsMeta.setDisplayName(ChatColor.GRAY + "Steel Boots");
+                    output.addItem(steelBoots);
+                    steelCount -= 5;
+                }
+                break;
+        }
+        return result;
     }
 }
 
@@ -439,10 +432,10 @@ public final class EventListener implements Listener {
             for (SpigotMachine spigotMachine: smList) {
                 if (spigotMachine instanceof Assembler && spigotMachine.getCoreBlock().equals(clickedLoc)) {
                     // Open selection GUI
-                    AssemblerGUI temp = new AssemblerGUI();
-                    temp.openInventory(e.getPlayer());
-
+                    System.out.println("Opening selection GUI");
+                    ((Assembler) spigotMachine).openInventory(e.getPlayer());
                     break;
+
                 }
             }
         }
@@ -474,34 +467,32 @@ public final class EventListener implements Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent e) {
-        if(e.getInventory().getHolder() instanceof AssemblerGUI) {
-            AssemblerGUI asmGUI = (AssemblerGUI) e.getInventory().getHolder();
+        if(e.getInventory().getHolder() instanceof Assembler) {
+            Assembler assembler = (Assembler) e.getInventory().getHolder();
             System.out.println("This is an assembler selection gui");
             int slot = e.getSlot();
             System.out.println(slot);
             switch(slot) {
                 case 0:
-                    asmGUI.getAssembler().setRecipe("steel helmet");
+                    assembler.setRecipe("steel helmet");
                     e.getWhoClicked().sendMessage(ChatColor.AQUA + "Set recipe to steel helmet");
                     break;
 
                 case 1:
-                    asmGUI.getAssembler().setRecipe("steel chestplate");
+                    assembler.setRecipe("steel chestplate");
                     e.getWhoClicked().sendMessage(ChatColor.AQUA + "Set recipe to steel chestplate");
                     break;
 
                 case 2:
-                    asmGUI.getAssembler().setRecipe("steel leggings");
+                    assembler.setRecipe("steel leggings");
                     e.getWhoClicked().sendMessage(ChatColor.AQUA + "Set recipe to steel leggings");
                     break;
 
                 case 3:
-                    asmGUI.getAssembler().setRecipe("steel boots");
+                    assembler.setRecipe("steel boots");
                     e.getWhoClicked().sendMessage(ChatColor.AQUA + "Set recipe to steel boots");
                     break;
             }
         }
     }
-
 }
-
