@@ -42,14 +42,32 @@ public final class SpigotMachinery extends JavaPlugin {
         bfSummoner.setItemMeta(bfSummonerItemMeta);
 
         NamespacedKey bfKey = new NamespacedKey(this, "bfSummoner");
-        ShapedRecipe recipe = new ShapedRecipe(bfKey, bfSummoner);
-        recipe.shape("IBI", "IPI", "IRI");
-        recipe.setIngredient('I', Material.IRON_BLOCK);
-        recipe.setIngredient('P', Material.FURNACE);
-        recipe.setIngredient('B', Material.PISTON_BASE);
-        recipe.setIngredient('R', Material.REDSTONE);
+        ShapedRecipe bfRecipe = new ShapedRecipe(bfKey, bfSummoner);
+        bfRecipe.shape("IBI", "KPK", "IRI");
+        bfRecipe.setIngredient('I', Material.IRON_BLOCK);
+        bfRecipe.setIngredient('P', Material.OBSERVER);
+        bfRecipe.setIngredient('B', Material.PISTON_BASE);
+        bfRecipe.setIngredient('R', Material.REDSTONE);
+        bfRecipe.setIngredient('K', Material.OBSIDIAN);
 
-        Bukkit.addRecipe(recipe);
+        Bukkit.addRecipe(bfRecipe);
+
+        ItemStack asmSummoner = new ItemStack(Material.PAPER);
+        ItemMeta asmSummonerMeta = asmSummoner.getItemMeta();
+        asmSummonerMeta.setDisplayName(ChatColor.GOLD + "Assembler");
+        asmSummonerMeta.setLore(Collections.singletonList(ChatColor.AQUA + "Right click to place!"));
+        asmSummoner.setItemMeta(asmSummonerMeta);
+
+        NamespacedKey asmKey = new NamespacedKey(this, "asmSummoner");
+        ShapedRecipe asmRecipe = new ShapedRecipe(asmKey, asmSummoner);
+        asmRecipe.shape("IPI", "HCH", "IPI");
+        asmRecipe.setIngredient('I', Material.IRON_BLOCK);
+        asmRecipe.setIngredient('P', Material.PISTON_BASE);
+        asmRecipe.setIngredient('H', Material.HOPPER);
+        asmRecipe.setIngredient('C', Material.WORKBENCH);
+
+        Bukkit.addRecipe(asmRecipe);
+
 
         getServer().getPluginManager().registerEvents(new EventListener(), this);
 

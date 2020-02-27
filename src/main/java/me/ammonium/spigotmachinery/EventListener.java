@@ -30,6 +30,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.*;
 import java.util.Collections;
+import java.util.Map;
 
 import static me.ammonium.spigotmachinery.SpigotMachinery.mfList;
 
@@ -73,9 +74,11 @@ class MechanicalFurnace extends SpigotMachine {
 }
 
 class BlastFurnace extends SpigotMachine {
-    private int ironCount = 0;
-    private ItemStack steel = new ItemStack(Material.IRON_INGOT);
+    private int ironCount;
+    private ItemStack steel;
     public BlastFurnace() {
+        ironCount = 0;
+        steel = new ItemStack(Material.IRON_INGOT);
         ItemMeta steelMeta = steel.getItemMeta();
         steelMeta.setDisplayName(ChatColor.GRAY + "Steel Ingot");
         steelMeta.setLore(Collections.singletonList(ChatColor.AQUA + "SpigotMachinery Ingredient"));
@@ -84,12 +87,14 @@ class BlastFurnace extends SpigotMachine {
 
     @Override
     boolean processInput(ItemStack input, Location inputLoc) {
+        boolean result = false;
         // Add iron to ironCount
         if (input.getType().equals(Material.IRON_INGOT) && fuelRemaining > 0) {
+            result = true;
             Hopper inputHop = (Hopper) inputLoc.getBlock().getState();
             Inventory inputInv = inputHop.getInventory();
             inputInv.removeItem(input);
-            ironCount++;
+            ironCount += input.getAmount();
             fuelRemaining--;
 
             // If theres 5+ iron, make steel and decrease ironCount
@@ -99,20 +104,59 @@ class BlastFurnace extends SpigotMachine {
                 output.addItem(steel);
                 ironCount -= 5;
             }
-            return true;
         } else {
-            return false;
+            System.out.println(input.getType());
+
         }
+        return result;
     }
 
 }
 
-// class Assembler extends SpigotMachine
+// TODO: Add recipes and selection GUI to Assembler
+class Assembler extends SpigotMachine {
+    Map<String, Object> input2HopperLoc;
+    Map<String, Object> input3HopperLoc;
+    int steelCount = 0;
+
+    void setInput2HopperLoc(Location inputHopperLoc) {
+        this.input2HopperLoc = inputHopperLoc.serialize();
+    }
+    void setInput3HopperLoc(Location inputHopperLoc) {
+        this.input3HopperLoc = inputHopperLoc.serialize();
+    }
+
+    Location getInput2HopperLoc() {
+        return Location.deserialize(input2HopperLoc);
+    }
+    Location getInput3HopperLoc() {
+        return Location.deserialize(input3HopperLoc);
+    }
+
+    @Override
+    boolean processInput(ItemStack input, Location inputLoc) {
+        boolean result = false;
+        try{
+            if(input.getItemMeta().getDisplayName().equals(ChatColor.GRAY + "Steel Ingot")) {
+                result = true;
+                steelCount += input.getAmount();
+                Hopper inputHop = (Hopper) inputLoc.getBlock().getState();
+                Inventory inputInv = inputHop.getInventory();
+                inputInv.removeItem(input);
+            }
+
+        } catch (NullPointerException ignored) {
+            // Ignored. Reason: doesn't happen with custom items
+        }
+        return result;
+    }
+}
 
 
 public final class EventListener implements Listener {
     private File mf_file = new File("plugins/SpigotMachinery/mf.schematic");
     private File bf_file = new File("plugins/SpigotMachinery/bf.schematic");
+    private File asm_file = new File("plugins/SpigotMachinery/basm.schematic");
 
     @EventHandler
     public void onHopperMove(InventoryMoveItemEvent e) {
@@ -139,7 +183,8 @@ public final class EventListener implements Listener {
             if (mySM != null) {
                 switch (actionType){
                     case "input":
-                        e.setCancelled(!(mySM.processInput(e.getItem(), inputLoc)));
+                        boolean inputResult = mySM.processInput(e.getItem(), inputLoc);
+                        e.setCancelled(!inputResult);
                         break;
                     case "fuel":
                         e.setCancelled(!(mySM.processFuel(e.getItem())));
@@ -217,7 +262,7 @@ public final class EventListener implements Listener {
                     Location machineBottom = new Location(player.getWorld(), (loc.getBlockX() - 2), (loc.getBlockY()), (loc.getBlockZ() - 3));
                     Location machineTop = new Location(player.getWorld(), (loc.getBlockX() + 5), (loc.getBlockY() + 3), (loc.getBlockZ() - 5));
                     Location coreBlock = new Location(player.getWorld(), (loc.getBlockX()), (loc.getBlockY() + 1), (loc.getBlockZ() - 3));
-                    MechanicalFurnace temp = new MechanicalFurnace();
+                    BlastFurnace temp = new BlastFurnace();
                     temp.setFuelHopperLoc(fuelHopper);
                     temp.setInputHopperLoc(inputHopper);
                     temp.setOutputHopperLoc(outputHopper);
@@ -227,9 +272,44 @@ public final class EventListener implements Listener {
                     mfList.add(temp);
 
                 }
+                else if (item.getItemMeta().getDisplayName().equals(ChatColor.GOLD + "Assenvbler")) {
+                    e.getPlayer().sendMessage(ChatColor.DARK_BLUE + "Summoning Blast Furnace...");
+                    player.getInventory().removeItem(item);
+
+                    // Paste MF schematic
+                    WorldData worldData = world.getWorldData();
+                    Clipboard clipboard = ClipboardFormat.SCHEMATIC.getReader(new FileInputStream(bf_file)).read(worldData);
+                    EditSession extent = WorldEdit.getInstance().getEditSessionFactory().getEditSession(world, -1);
+                    AffineTransform transform = new AffineTransform();
+                    ForwardExtentCopy copy = new ForwardExtentCopy(clipboard, clipboard.getRegion(), clipboard.getOrigin(), extent, position);
+                    if (!transform.isIdentity()) copy.setTransform(transform);
+                    copy.setSourceMask(new ExistingBlockMask(clipboard));
+                    Operations.completeLegacy(copy);
+                    extent.flushQueue();
+
+                    // Get location of inputHopper, outputHopper, and fuelHopper
+                    Location inputHopper = new Location(player.getWorld(), (loc.getBlockX() - 2), (loc.getBlockY() + 2), (loc.getBlockZ() - 4));
+                    Location input2Hopper = new Location(player.getWorld(), (loc.getBlockX() - 2), (loc.getBlockY() + 2), (loc.getBlockZ() - 6));
+                    Location input3Hopper = new Location(player.getWorld(), (loc.getBlockX() - 2), (loc.getBlockY() + 2), (loc.getBlockZ() - 8));
+                    Location outputHopper = new Location(player.getWorld(), (loc.getBlockX() + 5), (loc.getBlockY() + 2), (loc.getBlockZ() - 4));
+                    Location fuelHopper = new Location(player.getWorld(), (loc.getBlockX() - 1), (loc.getBlockY() + 3), (loc.getBlockZ() - 3));
+                    Location machineBottom = new Location(player.getWorld(), (loc.getBlockX() - 2), (loc.getBlockY()), (loc.getBlockZ() - 3));
+                    Location machineTop = new Location(player.getWorld(), (loc.getBlockX() + 7), (loc.getBlockY() + 3), (loc.getBlockZ() - 9));
+                    Location coreBlock = new Location(player.getWorld(), (loc.getBlockX()), (loc.getBlockY() + 2), (loc.getBlockZ() - 3));
+                    Assembler temp = new Assembler();
+                    temp.setFuelHopperLoc(fuelHopper);
+                    temp.setInputHopperLoc(inputHopper);
+                    temp.setInput2HopperLoc(input2Hopper);
+                    temp.setInput3HopperLoc(input3Hopper);
+                    temp.setOutputHopperLoc(outputHopper);
+                    temp.setMachineBottom(machineBottom);
+                    temp.setMachineTop(machineTop);
+                    temp.setCoreBlock(coreBlock);
+                    mfList.add(temp);
+
+                }
             } catch (NullPointerException ignored) {
-                System.out.println("NullPointerException ignored");
-                // Ignored. Reason: doesn't happen with summoners
+                // Ignored. Reason: doesn't happen with custom items
             }
         }
     }

@@ -72,6 +72,7 @@ public class SpigotMachine implements Serializable {
     }
 
     boolean processInput(ItemStack input, Location inputLoc) {
+        System.out.println("This shouldnt appear");
         return false;
     }
 }
