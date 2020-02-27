@@ -13,6 +13,7 @@ SpigotMachines have three basic hoppers:
 Coal can do 6 operations while a coal block can do 54.
 * The input hopper. Here you can input any compatible items.
 * The output hopper. Here is where any compatible products will appear
+Some machines may have more than these basic hoppers.
 **Please note that you can't input directly to the hoppers! Use chests or other hoppers**
 
 ## What can it do?
@@ -26,10 +27,10 @@ The MechanicalFurnace can process 4 materials:
 
 The BlastFurnace can process 5 iron ingots into 1 steel ingot.
 
-Assemblers exist yet they have no recipes for now.
+Assemblers exist and they have 3 input hoppers, yet they have no recipes for now.
 
 ## How do I create a SM?
-1. Obtain the summoner by crafting it with the recipe shown below:
+1. Obtain the summoner by crafting it with the recipes shown below:
 ![Crafting Recipe](https://i.imgur.com/ZF5uQ2k.png)
 2. Right click the summoner to place it. (Note: as of now, MFs will only place North of the player)
 Here is an example setup:
