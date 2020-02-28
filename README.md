@@ -42,12 +42,16 @@ More Assembler recipes are planned, such as SMs crafted via the Assembler.
 ## How do I create a SM?
 1. Obtain the summoner by crafting it with the recipes shown below:
 ![Mechanical Furnace](https://i.imgur.com/ZF5uQ2k.png)
+![Blast Furnace](https://i.imgur.com/LBnhQQe.png)
+![Assembler](https://i.imgur.com/a9rlbWt.png)
 2. Right click the summoner to place it. (Note: as of now, SMs will only place facing North of the player)
 Here is an example setup of MechanicalFurnaces:
 ![Example setup](https://i.imgur.com/M6XmZKV.png)
+![Blast Furnace design](https://i.imgur.com/Ww6kBev.png)
+![Assembler Design](https://i.imgur.com/Ebuwlh2.png)
 
 ## How do you install it?
-1. Go to https://www.mediafire.com/file/carlzfsmn4z7mrj/SM-Zipped.zip/file and download the zipped folder.
+1. Go to https://www.mediafire.com/file/swwqwnn4tnec23d/SpigotMachinery2.0.zip/file and download the zipped folder.
 2. **Extract** the zipped folder's contents and move them to your plugins folder. **DO NOT move the zipped folder on the plugins folder**.
 
 ## Why did you do this?
