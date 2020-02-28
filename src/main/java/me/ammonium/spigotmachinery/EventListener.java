@@ -32,7 +32,9 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
@@ -208,7 +210,6 @@ class Assembler extends SpigotMachine implements InventoryHolder {
 
         switch(recipe) {
             case "steel helmet":
-                System.out.println("Making steel helmet");
                 if (steelCount >= 5) {
                     ItemStack steelHelmet = new ItemStack(Material.IRON_HELMET);
                     ItemMeta steelHelmetMeta = steelHelmet.getItemMeta();
@@ -216,6 +217,7 @@ class Assembler extends SpigotMachine implements InventoryHolder {
                     steelHelmetMeta.addEnchant(Enchantment.DURABILITY, 6, true);
                     steelHelmetMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 5, true);
                     steelHelmetMeta.setDisplayName(ChatColor.GRAY + "Steel Helmet");
+                    steelHelmet.setItemMeta(steelHelmetMeta);
                     output.addItem(steelHelmet);
                     steelCount -= 5;
 
@@ -223,7 +225,6 @@ class Assembler extends SpigotMachine implements InventoryHolder {
                 break;
 
             case "steel chestplate":
-                System.out.println("Making steel chestplate");
                 if (steelCount >= 8) {
                     ItemStack steelChestplate = new ItemStack(Material.IRON_CHESTPLATE);
                     ItemMeta steelChestplateMeta = steelChestplate.getItemMeta();
@@ -231,13 +232,13 @@ class Assembler extends SpigotMachine implements InventoryHolder {
                     steelChestplateMeta.addEnchant(Enchantment.DURABILITY, 6, true);
                     steelChestplateMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 5, true);
                     steelChestplateMeta.setDisplayName(ChatColor.GRAY + "Steel Chestplate");
+                    steelChestplate.setItemMeta(steelChestplateMeta);
                     output.addItem(steelChestplate);
                     steelCount -= 5;
                 }
                 break;
 
             case "steel leggings":
-                System.out.println("Making steel leggings");
                 if(steelCount >= 7) {
                     ItemStack steelLeggings = new ItemStack(Material.IRON_LEGGINGS);
                     ItemMeta steelLeggingsMeta = steelLeggings.getItemMeta();
@@ -245,13 +246,13 @@ class Assembler extends SpigotMachine implements InventoryHolder {
                     steelLeggingsMeta.addEnchant(Enchantment.DURABILITY, 6, true);
                     steelLeggingsMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 5, true);
                     steelLeggingsMeta.setDisplayName(ChatColor.GRAY + "Steel Helmet");
+                    steelLeggings.setItemMeta(steelLeggingsMeta);
                     output.addItem(steelLeggings);
                     steelCount -= 5;
                 }
                 break;
 
             case "steel boots":
-                System.out.println("Making steel boots");
                 if(steelCount >= 4) {
                     ItemStack steelBoots = new ItemStack(Material.IRON_BOOTS);
                     ItemMeta steelBootsMeta = steelBoots.getItemMeta();
@@ -259,6 +260,7 @@ class Assembler extends SpigotMachine implements InventoryHolder {
                     steelBootsMeta.addEnchant(Enchantment.DURABILITY, 6, true);
                     steelBootsMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 5, true);
                     steelBootsMeta.setDisplayName(ChatColor.GRAY + "Steel Boots");
+                    steelBoots.setItemMeta(steelBootsMeta);
                     output.addItem(steelBoots);
                     steelCount -= 5;
                 }
@@ -272,7 +274,7 @@ class Assembler extends SpigotMachine implements InventoryHolder {
 public final class EventListener implements Listener {
     private File mfFile = new File("plugins/SpigotMachinery/mf.schematic");
     private File bfFile = new File("plugins/SpigotMachinery/bf.schematic");
-    private File asmFile = new File("plugins/SpigotMachinery/basm.schematic");
+    private File asmFile = new File("plugins/SpigotMachinery/asm.schematic");
 
     @EventHandler
     public void onHopperMove(InventoryMoveItemEvent e) {
@@ -325,7 +327,6 @@ public final class EventListener implements Listener {
         if (e.hasItem()) {
             try {
                 ItemStack item = e.getItem();
-                item.setAmount(1);
                 if (item.getItemMeta().getDisplayName().equals(ChatColor.GOLD + "Mechanical Furnace")) {
                     e.getPlayer().sendMessage(ChatColor.DARK_BLUE + "Summoning Mechanical Furnace...");
                     player.getInventory().removeItem(item);
@@ -359,7 +360,7 @@ public final class EventListener implements Listener {
                 }
                 else if (item.getItemMeta().getDisplayName().equals(ChatColor.GOLD + "Blast Furnace")) {
                     e.getPlayer().sendMessage(ChatColor.DARK_BLUE + "Summoning Blast Furnace...");
-                    player.getInventory().addItem();
+                    player.getInventory().removeItem(item);
 
                     // Paste MF schematic
                     WorldData worldData = world.getWorldData();
@@ -395,7 +396,7 @@ public final class EventListener implements Listener {
 
                     // Paste MF schematic
                     WorldData worldData = world.getWorldData();
-                    Clipboard clipboard = ClipboardFormat.SCHEMATIC.getReader(new FileInputStream(bfFile)).read(worldData);
+                    Clipboard clipboard = ClipboardFormat.SCHEMATIC.getReader(new FileInputStream(asmFile)).read(worldData);
                     EditSession extent = WorldEdit.getInstance().getEditSessionFactory().getEditSession(world, -1);
                     AffineTransform transform = new AffineTransform();
                     ForwardExtentCopy copy = new ForwardExtentCopy(clipboard, clipboard.getRegion(), clipboard.getOrigin(), extent, position);
@@ -411,7 +412,7 @@ public final class EventListener implements Listener {
                     Location outputHopper = new Location(player.getWorld(), (loc.getBlockX() + 5), (loc.getBlockY() + 2), (loc.getBlockZ() - 4));
                     Location fuelHopper = new Location(player.getWorld(), (loc.getBlockX() - 1), (loc.getBlockY() + 3), (loc.getBlockZ() - 3));
                     Location machineBottom = new Location(player.getWorld(), (loc.getBlockX() - 2), (loc.getBlockY()), (loc.getBlockZ() - 3));
-                    Location machineTop = new Location(player.getWorld(), (loc.getBlockX() + 7), (loc.getBlockY() + 3), (loc.getBlockZ() - 9));
+                    Location machineTop = new Location(player.getWorld(), (loc.getBlockX() + 7), (loc.getBlockY() + 4), (loc.getBlockZ() - 9));
                     Location coreBlock = new Location(player.getWorld(), (loc.getBlockX()), (loc.getBlockY() + 2), (loc.getBlockZ() - 3));
                     Assembler temp = new Assembler();
                     temp.setFuelHopperLoc(fuelHopper);
@@ -429,11 +430,12 @@ public final class EventListener implements Listener {
                 // Ignored. Reason: doesn't happen with custom items
             }
         } else {
+
             Location clickedLoc = e.getClickedBlock().getLocation();
             for (SpigotMachine spigotMachine: smList) {
                 if (spigotMachine instanceof Assembler && spigotMachine.getCoreBlock().equals(clickedLoc)) {
                     // Open selection GUI
-                    System.out.println("Opening selection GUI");
+                    System.out.println("Opening selection GUI for Assembler");
                     ((Assembler) spigotMachine).openInventory(e.getPlayer());
                     break;
 
@@ -470,9 +472,7 @@ public final class EventListener implements Listener {
     public void onInventoryClick(InventoryClickEvent e) {
         if(e.getInventory().getHolder() instanceof Assembler) {
             Assembler assembler = (Assembler) e.getInventory().getHolder();
-            System.out.println("This is an assembler selection gui");
             int slot = e.getRawSlot();
-            System.out.println(slot);
             switch(slot) {
                 case 0:
                     assembler.setRecipe("steel helmet");
@@ -494,6 +494,7 @@ public final class EventListener implements Listener {
                     e.getWhoClicked().sendMessage(ChatColor.AQUA + "Set recipe to steel boots");
                     break;
             }
+            e.setCancelled(true);
         }
     }
 }
