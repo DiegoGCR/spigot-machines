@@ -51,7 +51,7 @@ Here is an example setup of MechanicalFurnaces:
 ![Assembler Design](https://i.imgur.com/Ebuwlh2.png)
 
 ## How do you install it?
-1. Go to https://www.mediafire.com/file/carlzfsmn4z7mrj/SM-Zipped.zip/file and download the zipped folder.
+1. Go to https://www.mediafire.com/file/swwqwnn4tnec23d/SpigotMachinery2.0.zip/file and download the zipped folder.
 2. **Extract** the zipped folder's contents and move them to your plugins folder. **DO NOT move the zipped folder on the plugins folder**.
 
 ## Why did you do this?
