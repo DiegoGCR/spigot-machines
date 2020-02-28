@@ -389,8 +389,8 @@ public final class EventListener implements Listener {
                     smList.add(temp);
 
                 }
-                else if (item.getItemMeta().getDisplayName().equals(ChatColor.GOLD + "Assenvbler")) {
-                    e.getPlayer().sendMessage(ChatColor.DARK_BLUE + "Summoning Blast Furnace...");
+                else if (item.getItemMeta().getDisplayName().equals(ChatColor.GOLD + "Assembler")) {
+                    e.getPlayer().sendMessage(ChatColor.DARK_BLUE + "Summoning Assembler...");
                     player.getInventory().removeItem(item);
 
                     // Paste MF schematic
