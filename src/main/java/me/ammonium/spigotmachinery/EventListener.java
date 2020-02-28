@@ -322,6 +322,7 @@ public final class EventListener implements Listener {
         Location loc = player.getLocation();
         World world = new BukkitWorld(player.getWorld());
         Vector position = new Vector(loc.getX(), loc.getY(), loc.getZ());
+        Inventory inventory = player.getInventory();
 
         // Check if it is a SpigotMachine summoner
         if (e.hasItem()) {
@@ -329,7 +330,10 @@ public final class EventListener implements Listener {
                 ItemStack item = e.getItem();
                 if (item.getItemMeta().getDisplayName().equals(ChatColor.GOLD + "Mechanical Furnace")) {
                     e.getPlayer().sendMessage(ChatColor.DARK_BLUE + "Summoning Mechanical Furnace...");
-                    player.getInventory().removeItem(item);
+                    ItemStack item2 = new ItemStack(item);
+                    item2.setAmount(1);
+                    inventory.removeItem(item2);
+
 
                     // Paste MF schematic
                     WorldData worldData = world.getWorldData();
@@ -360,7 +364,9 @@ public final class EventListener implements Listener {
                 }
                 else if (item.getItemMeta().getDisplayName().equals(ChatColor.GOLD + "Blast Furnace")) {
                     e.getPlayer().sendMessage(ChatColor.DARK_BLUE + "Summoning Blast Furnace...");
-                    player.getInventory().removeItem(item);
+                    ItemStack item2 = new ItemStack(item);
+                    item2.setAmount(1);
+                    inventory.removeItem(item2);
 
                     // Paste MF schematic
                     WorldData worldData = world.getWorldData();
@@ -392,7 +398,9 @@ public final class EventListener implements Listener {
                 }
                 else if (item.getItemMeta().getDisplayName().equals(ChatColor.GOLD + "Assembler")) {
                     e.getPlayer().sendMessage(ChatColor.DARK_BLUE + "Summoning Assembler...");
-                    player.getInventory().removeItem(item);
+                    ItemStack item2 = new ItemStack(item);
+                    item2.setAmount(1);
+                    inventory.removeItem(item2);
 
                     // Paste MF schematic
                     WorldData worldData = world.getWorldData();
