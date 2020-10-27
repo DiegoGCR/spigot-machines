@@ -13,11 +13,11 @@ import java.util.List;
 
 
 public final class SpigotMachinery extends JavaPlugin {
-    private File savedMachines = new File("plugins/SpigotMachinery/savedMachines.data");
+    private final File savedMachines = new File("plugins/SpigotMachinery/savedMachines.data");
     static List<SpigotMachine> smList = new ArrayList<>();
 
     @Override
-    public void onEnable() {
+    public void onEnable() throws NullPointerException {
         // Plugin startup logic
         ItemStack mfSummoner = new ItemStack(Material.PAPER);
         ItemMeta mfSummonerItemMeta = mfSummoner.getItemMeta();
@@ -30,7 +30,7 @@ public final class SpigotMachinery extends JavaPlugin {
         mfRecipe.shape("IBI", "IPI", "IRI");
         mfRecipe.setIngredient('I', Material.IRON_INGOT);
         mfRecipe.setIngredient('P', Material.FURNACE);
-        mfRecipe.setIngredient('B', Material.PISTON_BASE);
+        mfRecipe.setIngredient('B', Material.PISTON);
         mfRecipe.setIngredient('R', Material.REDSTONE);
 
         Bukkit.addRecipe(mfRecipe);
@@ -46,7 +46,7 @@ public final class SpigotMachinery extends JavaPlugin {
         bfRecipe.shape("IBI", "KPK", "IRI");
         bfRecipe.setIngredient('I', Material.IRON_BLOCK);
         bfRecipe.setIngredient('P', Material.OBSERVER);
-        bfRecipe.setIngredient('B', Material.PISTON_BASE);
+        bfRecipe.setIngredient('B', Material.PISTON);
         bfRecipe.setIngredient('R', Material.REDSTONE);
         bfRecipe.setIngredient('K', Material.OBSIDIAN);
 
@@ -62,9 +62,9 @@ public final class SpigotMachinery extends JavaPlugin {
         ShapedRecipe asmRecipe = new ShapedRecipe(asmKey, asmSummoner);
         asmRecipe.shape("IPI", "HCH", "IPI");
         asmRecipe.setIngredient('I', Material.IRON_BLOCK);
-        asmRecipe.setIngredient('P', Material.PISTON_BASE);
+        asmRecipe.setIngredient('P', Material.PISTON);
         asmRecipe.setIngredient('H', Material.HOPPER);
-        asmRecipe.setIngredient('C', Material.WORKBENCH);
+        asmRecipe.setIngredient('C', Material.CRAFTING_TABLE);
 
         Bukkit.addRecipe(asmRecipe);
 

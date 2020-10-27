@@ -3,16 +3,11 @@ package me.ammonium.spigotmachinery;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.MaxChangedBlocksException;
 import com.sk89q.worldedit.Vector;
-import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
-import com.sk89q.worldedit.extent.clipboard.Clipboard;
-import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormat;
-import com.sk89q.worldedit.function.mask.ExistingBlockMask;
-import com.sk89q.worldedit.function.operation.ForwardExtentCopy;
-import com.sk89q.worldedit.function.operation.Operations;
-import com.sk89q.worldedit.math.transform.AffineTransform;
+import com.sk89q.worldedit.extent.clipboard.ClipboardFormats;
+import com.sk89q.worldedit.math.transform.Transform;
+import com.sk89q.worldedit.world.DataException;
 import com.sk89q.worldedit.world.World;
-import com.sk89q.worldedit.world.registry.WorldData;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -33,7 +28,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -82,11 +76,12 @@ class MechanicalFurnace extends SpigotMachine {
 
 class BlastFurnace extends SpigotMachine {
     private int ironCount;
-    private ItemStack steel;
+    private final ItemStack steel;
     public BlastFurnace() {
         ironCount = 0;
         steel = new ItemStack(Material.IRON_INGOT);
         ItemMeta steelMeta = steel.getItemMeta();
+        assert steelMeta != null;
         steelMeta.setDisplayName(ChatColor.GRAY + "Steel Ingot");
         steelMeta.setLore(Collections.singletonList(ChatColor.AQUA + "SpigotMachinery Ingredient"));
         steel.setItemMeta(steelMeta);
@@ -120,7 +115,7 @@ class BlastFurnace extends SpigotMachine {
 class Assembler extends SpigotMachine implements InventoryHolder {
     private Map<String, Object> input2HopperLoc;
     private Map<String, Object> input3HopperLoc;
-    private Inventory inv;
+    private final Inventory inv;
     private int steelCount = 0;
     private String recipe = null;
 
@@ -145,10 +140,11 @@ class Assembler extends SpigotMachine implements InventoryHolder {
         return Location.deserialize(input3HopperLoc);
     }
 
-    public Assembler() {
+    public Assembler() throws NullPointerException {
         inv = Bukkit.createInventory(this, 9, "Select a recipe");
         ItemStack steelHelmetRecipe = new ItemStack(Material.IRON_HELMET);
         ItemMeta steelHelmetRecipeMeta = steelHelmetRecipe.getItemMeta();
+        assert steelHelmetRecipeMeta != null;
         steelHelmetRecipeMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 5, true);
         steelHelmetRecipeMeta.addEnchant(Enchantment.DURABILITY, 6, true);
         steelHelmetRecipeMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 5, true);
@@ -158,6 +154,7 @@ class Assembler extends SpigotMachine implements InventoryHolder {
         inv.addItem(steelHelmetRecipe);
         ItemStack steelChestplateRecipe = new ItemStack(Material.IRON_CHESTPLATE);
         ItemMeta steelChestplateRecipeMeta = steelChestplateRecipe.getItemMeta();
+        assert steelChestplateRecipeMeta != null;
         steelChestplateRecipeMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 5, true);
         steelChestplateRecipeMeta.addEnchant(Enchantment.DURABILITY, 6, true);
         steelChestplateRecipeMeta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 5, true);
@@ -272,9 +269,9 @@ class Assembler extends SpigotMachine implements InventoryHolder {
 
 
 public final class EventListener implements Listener {
-    private File mfFile = new File("plugins/SpigotMachinery/mf.schematic");
-    private File bfFile = new File("plugins/SpigotMachinery/bf.schematic");
-    private File asmFile = new File("plugins/SpigotMachinery/asm.schematic");
+    private final File mfFile = new File("plugins/SpigotMachinery/mf.schematic");
+    private final File bfFile = new File("plugins/SpigotMachinery/bf.schematic");
+    private final File asmFile = new File("plugins/SpigotMachinery/asm.schematic");
 
     @EventHandler
     public void onHopperMove(InventoryMoveItemEvent e) {
@@ -317,11 +314,12 @@ public final class EventListener implements Listener {
     }
 
     @EventHandler
-    public void onPlayerInteract(PlayerInteractEvent e) throws IOException, MaxChangedBlocksException {
+    public void onPlayerInteract(PlayerInteractEvent e) throws DataException, IOException, MaxChangedBlocksException {
         Player player = e.getPlayer();
         Location loc = player.getLocation();
         World world = new BukkitWorld(player.getWorld());
         Vector position = new Vector(loc.getX(), loc.getY(), loc.getZ());
+
         Inventory inventory = player.getInventory();
 
         // Check if it is a SpigotMachine summoner
@@ -336,15 +334,21 @@ public final class EventListener implements Listener {
 
 
                     // Paste MF schematic
-                    WorldData worldData = world.getWorldData();
-                    Clipboard clipboard = ClipboardFormat.SCHEMATIC.getReader(new FileInputStream(mfFile)).read(worldData);
-                    EditSession extent = WorldEdit.getInstance().getEditSessionFactory().getEditSession(world, -1);
-                    AffineTransform transform = new AffineTransform();
-                    ForwardExtentCopy copy = new ForwardExtentCopy(clipboard, clipboard.getRegion(), clipboard.getOrigin(), extent, position);
-                    if (!transform.isIdentity()) copy.setTransform(transform);
-                    copy.setSourceMask(new ExistingBlockMask(clipboard));
-                    Operations.completeLegacy(copy);
-                    extent.flushQueue();
+//                    WorldData worldData = world.getWorldData();
+//                    Clipboard clipboard = ClipboardFormat.SCHEMATIC.getReader(new FileInputStream(mfFile)).read(worldData);
+//                    EditSession extent = WorldEdit.getInstance().getEditSessionFactory().getEditSession(world, -1);
+//                    AffineTransform transform = new AffineTransform();
+//                    ForwardExtentCopy copy = new ForwardExtentCopy(clipboard, clipboard.getRegion(), clipboard.getOrigin(), extent, position);
+//                    if (!transform.isIdentity()) copy.setTransform(transform);
+//                    copy.setSourceMask(new ExistingBlockMask(clipboard));
+//                    Operations.completeLegacy(copy);
+//                    extent.flushQueue();
+
+                    EditSession editSession =
+                            ClipboardFormats.findByFile(mfFile).load(mfFile).paste(world, position, true, false, (Transform) null);
+//                    EditSession es = new EditSession(BukkitUtil.getLocalWorld(world), 10000);
+//                    CuboidClipboard cc = CuboidClipboard.loadSchematic(mfFile);
+//                    cc.paste(es, position, true);
 
                     // Get location of inputHopper, outputHopper, and fuelHopper
                     Location inputHopper = new Location(player.getWorld(), (loc.getBlockX() - 2), (loc.getBlockY() + 2), (loc.getBlockZ() - 4));
@@ -369,15 +373,17 @@ public final class EventListener implements Listener {
                     inventory.removeItem(item2);
 
                     // Paste MF schematic
-                    WorldData worldData = world.getWorldData();
-                    Clipboard clipboard = ClipboardFormat.SCHEMATIC.getReader(new FileInputStream(bfFile)).read(worldData);
-                    EditSession extent = WorldEdit.getInstance().getEditSessionFactory().getEditSession(world, -1);
-                    AffineTransform transform = new AffineTransform();
-                    ForwardExtentCopy copy = new ForwardExtentCopy(clipboard, clipboard.getRegion(), clipboard.getOrigin(), extent, position);
-                    if (!transform.isIdentity()) copy.setTransform(transform);
-                    copy.setSourceMask(new ExistingBlockMask(clipboard));
-                    Operations.completeLegacy(copy);
-                    extent.flushQueue();
+//                    WorldData worldData = world.getWorldData();
+//                    Clipboard clipboard = ClipboardFormat.SCHEMATIC.getReader(new FileInputStream(bfFile)).read(worldData);
+//                    EditSession extent = WorldEdit.getInstance().getEditSessionFactory().getEditSession(world, -1);
+//                    AffineTransform transform = new AffineTransform();
+//                    ForwardExtentCopy copy = new ForwardExtentCopy(clipboard, clipboard.getRegion(), clipboard.getOrigin(), extent, position);
+//                    if (!transform.isIdentity()) copy.setTransform(transform);
+//                    copy.setSourceMask(new ExistingBlockMask(clipboard));
+//                    Operations.completeLegacy(copy);
+//                    extent.flushQueue();
+                    EditSession editSession =
+                            ClipboardFormats.findByFile(mfFile).load(bfFile).paste(world, position, true, false, (Transform) null);
 
                     // Get location of inputHopper, outputHopper, and fuelHopper
                     Location inputHopper = new Location(player.getWorld(), (loc.getBlockX() - 2), (loc.getBlockY() + 2), (loc.getBlockZ() - 4));
@@ -403,15 +409,18 @@ public final class EventListener implements Listener {
                     inventory.removeItem(item2);
 
                     // Paste MF schematic
-                    WorldData worldData = world.getWorldData();
-                    Clipboard clipboard = ClipboardFormat.SCHEMATIC.getReader(new FileInputStream(asmFile)).read(worldData);
-                    EditSession extent = WorldEdit.getInstance().getEditSessionFactory().getEditSession(world, -1);
-                    AffineTransform transform = new AffineTransform();
-                    ForwardExtentCopy copy = new ForwardExtentCopy(clipboard, clipboard.getRegion(), clipboard.getOrigin(), extent, position);
-                    if (!transform.isIdentity()) copy.setTransform(transform);
-                    copy.setSourceMask(new ExistingBlockMask(clipboard));
-                    Operations.completeLegacy(copy);
-                    extent.flushQueue();
+//                    WorldData worldData = world.getWorldData();
+//                    Clipboard clipboard = ClipboardFormat.SCHEMATIC.getReader(new FileInputStream(asmFile)).read(worldData);
+//                    EditSession extent = WorldEdit.getInstance().getEditSessionFactory().getEditSession(world, -1);
+//                    AffineTransform transform = new AffineTransform();
+//                    ForwardExtentCopy copy = new ForwardExtentCopy(clipboard, clipboard.getRegion(), clipboard.getOrigin(), extent, position);
+//                    if (!transform.isIdentity()) copy.setTransform(transform);
+//                    copy.setSourceMask(new ExistingBlockMask(clipboard));
+//                    Operations.completeLegacy(copy);
+//                    extent.flushQueue();
+
+                    EditSession editSession =
+                            ClipboardFormats.findByFile(mfFile).load(asmFile).paste(world, position, true, false, (Transform) null);
 
                     // Get location of inputHopper, outputHopper, and fuelHopper
                     Location inputHopper = new Location(player.getWorld(), (loc.getBlockX() - 2), (loc.getBlockY() + 2), (loc.getBlockZ() - 4));
