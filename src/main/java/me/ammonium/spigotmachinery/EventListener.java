@@ -5,7 +5,6 @@ import com.sk89q.worldedit.MaxChangedBlocksException;
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
 import com.sk89q.worldedit.extent.clipboard.ClipboardFormats;
-import com.sk89q.worldedit.math.transform.Transform;
 import com.sk89q.worldedit.world.DataException;
 import com.sk89q.worldedit.world.World;
 import org.bukkit.Bukkit;
@@ -32,6 +31,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 
 import static me.ammonium.spigotmachinery.SpigotMachinery.smList;
 
@@ -344,8 +344,8 @@ public final class EventListener implements Listener {
 //                    Operations.completeLegacy(copy);
 //                    extent.flushQueue();
 
-                    EditSession editSession =
-                            ClipboardFormats.findByFile(mfFile).load(mfFile).paste(world, position, true, false, (Transform) null);
+                    EditSession editSession = Objects.requireNonNull(ClipboardFormats.findByFile(mfFile)).load(mfFile)
+                            .paste(world, position);
 //                    EditSession es = new EditSession(BukkitUtil.getLocalWorld(world), 10000);
 //                    CuboidClipboard cc = CuboidClipboard.loadSchematic(mfFile);
 //                    cc.paste(es, position, true);
@@ -382,8 +382,8 @@ public final class EventListener implements Listener {
 //                    copy.setSourceMask(new ExistingBlockMask(clipboard));
 //                    Operations.completeLegacy(copy);
 //                    extent.flushQueue();
-                    EditSession editSession =
-                            ClipboardFormats.findByFile(mfFile).load(bfFile).paste(world, position, true, false, (Transform) null);
+                    EditSession editSession = Objects.requireNonNull(ClipboardFormats.findByFile(bfFile)).load(bfFile)
+                            .paste(world, position);
 
                     // Get location of inputHopper, outputHopper, and fuelHopper
                     Location inputHopper = new Location(player.getWorld(), (loc.getBlockX() - 2), (loc.getBlockY() + 2), (loc.getBlockZ() - 4));
@@ -419,8 +419,8 @@ public final class EventListener implements Listener {
 //                    Operations.completeLegacy(copy);
 //                    extent.flushQueue();
 
-                    EditSession editSession =
-                            ClipboardFormats.findByFile(mfFile).load(asmFile).paste(world, position, true, false, (Transform) null);
+                    EditSession editSession = Objects.requireNonNull(ClipboardFormats.findByFile(asmFile)).load(asmFile)
+                            .paste(world, position);
 
                     // Get location of inputHopper, outputHopper, and fuelHopper
                     Location inputHopper = new Location(player.getWorld(), (loc.getBlockX() - 2), (loc.getBlockY() + 2), (loc.getBlockZ() - 4));
